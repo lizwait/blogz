@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>New Post</h1>
+
+    <form method='POST'>
+      <label for="title">Title</label>
+          <input name="title" type="text" maxlength="120" id=title1 value="{{title}}"/>
+          <span class="error">{{titleError}}</span>
+    <br/>
+      <textarea name="body" maxlength="300" id="body2"></textarea>
+          <span class="error">{{bodyError}}</span>
+    <br/>
+      <input id = "submit" type="submit" />
+    </form>
+{% endblock %}
+
