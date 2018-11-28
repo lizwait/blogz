@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, render_template
+from flask import Flask, request, redirect, render_template, session
 from flask_sqlalchemy import SQLAlchemy
 from hashutils import make_pw_hash, check_pw_hash
 
@@ -7,6 +7,7 @@ app.config['DEBUG'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://blogz:catsarethebest@localhost:8889/blogz'
 app.config['SQLALCHEMY_ECHO'] = True
 db = SQLAlchemy(app)
+app.secret_key = "8675309"
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -61,20 +62,21 @@ def register():
 
     return render_template('signup.html')
 
-@app.route('/login', methods='GET')
+@app.route('/login', methods=['GET'])
 def login():
     return render_template('login.html')
 
-@app.route('/login', methods='POST')
+@app.route('/login', methods=['POST'])
 def post_login():
     user = request.form['user-name']
     password = request.form['user-password1']
     verify_user = User.query.filter_by(username=user).first()
     if check_pw_hash(password, verify_user.pw_hash) == True:
-        return render_template('newpost.html')
+        session['User'] = user
+        return redirect('/newpost')
 
     else:
-        return render_template('login.html')
+        return redirect('/login')
     
 
 @app.route('/blog', methods=['GET'])
