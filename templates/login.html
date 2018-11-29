@@ -2,8 +2,9 @@
 
 {% block content %}
 
-    <h1>User Sign-Up</h1>
+    <h1>User Login</h1>
     <form method='POST'>
+      <div class="error">{{verification_error}}</div>
       <label for = username>Username
           <input name="user-name" type="text" value="{{userName}}"/>
           <span class="error">{{username_error}}</span>
@@ -16,5 +17,8 @@
       <br>
       <input id = "submit" type="submit" />
     </form>
+    <div>
+        <a href="/signup">Register</a>
+    </div>
         
 {% endblock %}

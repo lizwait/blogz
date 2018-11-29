@@ -57,10 +57,15 @@ def register():
                 new_user = User(user, password)
                 db.session.add(new_user)
                 db.session.commit()
-                # TODO - "remember" the user
                 return render_template('newpost.html')
 
     return render_template('signup.html')
+
+@app.before_request
+def require_login():
+    allowed_routes = ['login', 'signup']
+    if request.endpoint not in allowed_routes and 'User' not in session:
+        return redirect('/login')
 
 @app.route('/login', methods=['GET'])
 def login():
@@ -71,12 +76,30 @@ def post_login():
     user = request.form['user-name']
     password = request.form['user-password1']
     verify_user = User.query.filter_by(username=user).first()
+
+    if verify_user == None:
+        verification_error= "Please enter a valid username and password combination."
+        return render_template('login.html', verification_error=verification_error)
+        
+
+    username_error = ''
+    if user == "": 
+        username_error = "Please enter a valid username."
+
+    password_error1 = ''
+    if password == "":
+        password_error1 = "Please enter valid password."
+
+    if username_error != '' or password_error1 != '':
+        return render_template('login.html', username_error=username_error, password_error1=password_error1)
+
     if check_pw_hash(password, verify_user.pw_hash) == True:
         session['User'] = user
         return redirect('/newpost')
 
     else:
-        return redirect('/login')
+        verification_error= "Please enter a valid username and password combination."
+        return render_template('login.html', verification_error=verification_error)
     
 
 @app.route('/blog', methods=['GET'])
@@ -93,7 +116,7 @@ def blog_entries():
 def new_blog_entry1():    
     return render_template('newpost.html')
 
-@app.route("/newpost", methods = ['POST'])
+@app.route("/newpost", methods=['POST'])
 def new_blog_entry2():
 
     titleError = ''
@@ -114,5 +137,9 @@ def new_blog_entry2():
 
     return render_template('newpost.html', titleError=titleError, bodyError=bodyError)
 
+@app.route("/logout", methods=["GET"])
+def logout():
+    del session['User']
+    return redirect('/login')
 
 app.run()
