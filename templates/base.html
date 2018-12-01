@@ -14,16 +14,24 @@
             margin-top: 20px;
             margin-bottom: 20px;
         } 
+        #navright {
+            float: right;
+        }
       </style>
       <title>{{title}}</title>
   </head>
   <body>
-      <div>
-          <a href="/blog">Main Blog Page</a>
-          <a href="/login">Login</a>
+      <nav>
+      <span>
+          <a href="/">Home</a>&nbsp;
+          <a href="/blog">All Posts</a>&nbsp;
+          <a href="/newpost">New Post</a>&nbsp;
+      </span>
+      <span id="navright">
+          <a href="/login">Login</a>&nbsp;
           <a href="/logout">Logout</a>
-      </div>
-
+      </span>
+      </nav>
         {% block content %}
         {% endblock %}
 

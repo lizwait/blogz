@@ -25,9 +25,10 @@ class Blog(db.Model):
     body = db.Column(db.Text(300))
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-    def __init__(self, title, body):
+    def __init__(self, title, body, owner_id):
         self.title = title
         self.body = body
+        self.owner_id= owner_id
 
 @app.route('/signup', methods=['POST', 'GET'])
 def register():
@@ -57,13 +58,15 @@ def register():
                 new_user = User(user, password)
                 db.session.add(new_user)
                 db.session.commit()
-                return render_template('newpost.html')
+                session['user_id'] = new_user.id
+                session['User']= user
+                return redirect('/newpost')
 
     return render_template('signup.html')
 
 @app.before_request
 def require_login():
-    allowed_routes = ['login', 'signup']
+    allowed_routes = ['login', 'register', 'post_login', 'index', 'blog_entries']
     if request.endpoint not in allowed_routes and 'User' not in session:
         return redirect('/login')
 
@@ -95,6 +98,8 @@ def post_login():
 
     if check_pw_hash(password, verify_user.pw_hash) == True:
         session['User'] = user
+        existing_user = User.query.filter_by(username=user).first()
+        session['user_id'] = existing_user.id
         return redirect('/newpost')
 
     else:
@@ -106,13 +111,25 @@ def post_login():
 def blog_entries():
     blogs = Blog.query.all()
     id = request.args.get('id', '')
-    if id == '':
+    user_id = request.args.get('user', '')
+
+    if id == '' and user_id == '':
         return render_template('blog.html', blogs=blogs)
 
-    blog = Blog.query.get(id)
-    return render_template('blog-page.html', blog=blog)
+    if id != '':
+        blog = Blog.query.get(id)
+        return render_template('blog-page.html', blog=blog)
 
-@app.route("/newpost")
+    if user_id != '':
+        blogs = Blog.query.filter_by(owner_id=user_id).all()
+        return render_template('blog.html', blogs=blogs)
+
+@app.route("/", methods=["GET"])
+def index():
+    user_list = User.query.all()
+    return render_template('index.html', user_list=user_list)
+
+@app.route("/newpost", methods=["GET"])
 def new_blog_entry1():    
     return render_template('newpost.html')
 
@@ -130,16 +147,18 @@ def new_blog_entry2():
         bodyError = "Please enter a blog body."
 
     if titleError == '' and bodyError == '':
-        new_blog = Blog(title, body)
+        user_id = session['user_id']
+        new_blog = Blog(title, body, user_id)
         db.session.add(new_blog)
         db.session.commit()
         return redirect('/blog?id=' + str(new_blog.id))
 
     return render_template('newpost.html', titleError=titleError, bodyError=bodyError)
 
+
 @app.route("/logout", methods=["GET"])
 def logout():
-    del session['User']
+    session.clear()
     return redirect('/login')
 
 app.run()
